@@ -1,1 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>AtlasGo | Daily Adventure</title>
+    <!-- PWA Support -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#58cc02">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;800;900&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --duo-green: #58cc02;
+            --duo-green-dark: #46a302;
+            --duo-blue: #1cb0f6;
+            --duo-blue-dark: #1899d6;
+            --duo-gray: #e5e5e5;
+            --duo-text: #4b4b4b;
+        }
 
+        body {
+            font-family: 'Nunito', sans-serif;
+            margin: 0;
+            background-color: #fff;
+            color: var(--duo-text);
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* --- Header & Progress --- */
+        header {
+            padding: 10px 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            border-bottom: 2px solid var(--duo-gray);
+        }
+
+        .close-btn { font-size: 24px; color: #afafaf; cursor: pointer; }
+
+        .progress-container {
+            flex-grow: 1;
+            height: 16px;
+            background: var(--duo-gray);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            width: 20%;
+            height: 100%;
+            background: var(--duo-green);
+            border-radius: 10px;
+            transition: width 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        /* --- Screens --- */
+        .screen {
+            flex-grow: 1;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .active { display: flex; }
+
+        /* --- Wheel Screen --- */
+        .wheel-container {
+            width: 220px;
+            height: 220px;
+            border: 10px solid var(--duo-blue);
+            border-radius: 50%;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 80px;
+            margin-bottom: 40px;
+            transition: transform 3s cubic-bezier(0.15, 0, 0.15, 1);
+            background: #f7f7f7;
+            box-shadow: 0 8px 0 var(--duo-gray);
+        }
+
+        /* --- Map & Sights Screen --- */
+        #location-header { width: 100%; text-align: left; }
+        #location-header h1 { margin: 0; font-weight: 900; font-size: 28px; }
+        
+        #map-wrapper {
+            width: 100%;
+            height: 300px;
+            border-radius: 20px;
+            margin: 15px 0;
+            position: relative;
+            border: 2px solid var(--duo-gray);
+            overflow: hidden;
+        }
+        #map { width: 100%; height: 100%; }
+
+        .sights-scroll {
+            display: flex;
+            overflow-x: auto;
+            gap: 12px;
+            width: 100%;
+            padding: 10px 0;
+            scrollbar-width: none;
+        }
+        .sights-scroll::-webkit-scrollbar { display: none; }
+
+        .card {
+            min-width: 160px;
+            background: white;
+            border: 2px solid var(--duo-gray);
+            border-radius: 18px;
+            padding-bottom: 10px;
+            text-align: left;
+        }
+        .card img { width: 100%; height: 100px; object-fit: cover; border-radius: 15px 15px 0 0; }
+        .card span { display: block; padding: 8px 10px 0; font-weight: 800; font-size: 14px; }
+        .card small { display: block; padding: 0 10px; font-size: 11px; color: #777; }
+
+        /* --- 3D Buttons --- */
+        .btn-3d {
+            width: 100%;
+            padding: 16px;
+            border-radius: 16px;
+            border: none;
+            font-family: 'Nunito', sans-serif;
+            font-size: 18px;
+            font-weight: 800;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: filter 0.2s;
+        }
+
+        .btn-green {
+            background: var(--duo-green);
+            color: white;
+            box-shadow: 0 5px 0 var(--duo-green-dark);
+            margin-top: auto;
+        }
+
+        .btn-green:active {
+            box-shadow: none;
+            transform: translateY(5px);
+        }
+
+        /* --- Animations --- */
+        @keyframes pop {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        .pop-anim { animation: pop 0.4s ease; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="close-btn">✕</div>
+        <div class="progress-container">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
+        <div style="font-weight: 900; color: #ffc800;">🔥 1</div>
+    </header>
+
+    <!-- SCREEN 1: THE SPIN -->
+    <main id="spin-screen" class="screen active">
+        <h2 style="margin-bottom: 5px;">Daily Discovery</h2>
+        <p style="color: #777; margin-top: 0;">Spin to find your destination!</p>
+        
+        <div class="wheel-container" id="wheel">🌍</div>
+
+        <button class="btn-3d btn-green" id="spinBtn" onclick="handleSpin()">Spin Now!</button>
+    </main>
+
+    <!-- SCREEN 2: THE DESTINATION -->
+    <main id="dest-screen" class="screen">
+        <div id="location-header">
+            <h1 id="cityName">London</h1>
+            <span id="countryName" style="color: var(--duo-blue);">United Kingdom</span>
+        </div>
+
+        <div id="map-wrapper">
+            <div id="map"></div>
+        </div>
+
+        <div class="sights-scroll" id="sightsContainer">
+            <!-- Cards injected by JS -->
+        </div>
+
+        <button class="btn-3d btn-green" onclick="completeLevel()">I've Learned This!</button>
+    </main>
+
+    <script src="js/data.js"></script>
+    <!-- NOTE: Replace YOUR_API_KEY below -->
+    <script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY"></script>
+
+    <script>
+        const spinScreen = document.getElementById('spin-screen');
+        const destScreen = document.getElementById('dest-screen');
+        const wheel = document.getElementById('wheel');
+        const progressFill = document.getElementById('progressFill');
+
+        let currentCity = null;
+
+        function handleSpin() {
+            // Spin Animation
+            wheel.style.transform = "rotate(1080deg)";
+            
+            // Pick random city
+            currentCity = cityData[Math.floor(Math.random() * cityData.length)];
+
+            setTimeout(() => {
+                transitionToDest();
+            }, 3000);
+        }
+
+        function transitionToDest() {
+            spinScreen.classList.remove('active');
+            destScreen.classList.add('active');
+            
+            document.getElementById('cityName').innerText = currentCity.name;
+            document.getElementById('countryName').innerText = currentCity.country;
+
+            // Load Google Map
+            const map = new google.maps.Map(document.getElementById("map"), {
+                center: currentCity.coords,
+                zoom: 12,
+                disableDefaultUI: true,
+                styles: [ { "featureType": "water", "stylers": [{ "color": "#1cb0f6" }] } ]
+            });
+            
+            const transitLayer = new google.maps.TransitLayer();
+            transitLayer.setMap(map);
+
+            // Load Sights
+            const container = document.getElementById('sightsContainer');
+            container.innerHTML = currentCity.sights.map(s => `
+                <div class="card">
+                    <img src="${s.img}" />
+                    <span>${s.name}</span>
+                    <small>${s.desc}</small>
+                </div>
+            `).join('');
+        }
+
+        function completeLevel() {
+            progressFill.style.width = "100%";
+            alert("🎉 Level Complete! You're a Geographic Genius.");
+            setTimeout(() => location.reload(), 2000);
+        }
+    </script>
+</body>
+</html>
