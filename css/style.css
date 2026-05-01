@@ -1,0 +1,16 @@
+.green-button {
+  background-color: #58cc02;
+  border-bottom: 4px solid #46a302;
+  border-radius: 12px;
+  color: white;
+  padding: 12px 24px;
+  transition: all 0.1s;
+  font-family: 'Nunito', sans-serif;
+  text-transform: uppercase;
+  font-weight: bold;
+}
+
+.green-button:active {
+  border-bottom-width: 0px;
+  transform: translateY(4px); /* Simulates the 3D press */
+}
